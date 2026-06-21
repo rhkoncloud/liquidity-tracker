@@ -76,7 +76,10 @@
     <div class="title">Liquidity Tracker</div>
     <div class="sub" id="hsub">FY 2026-27 · OneDrive</div>
   </div>
-  <button class="ghost" id="signBtn">Sign in</button>
+  <div style="display:flex; gap:2px; align-items:center;">
+    <button class="ghost" id="setBtn" aria-label="Settings" title="Settings" style="font-size:18px;">⚙</button>
+    <button class="ghost" id="signBtn">Sign in</button>
+  </div>
 </header>
 
 <div class="wrap">
@@ -123,6 +126,20 @@
       <button id="delBtn" class="hide" style="color:var(--red); border-color:var(--red);">Delete</button>
       <button id="cancelBtn" style="flex:1;">Cancel</button>
       <button id="saveBtn" class="primary" style="flex:1;">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="set2">
+  <div class="panel">
+    <h3>Settings</h3>
+    <div class="field"><label>Workbook path in OneDrive (relative to your OneDrive root)</label>
+      <input id="fPath" placeholder="Folder/Subfolder/Workbook.xlsx" autocapitalize="off" autocorrect="off" spellcheck="false" /></div>
+    <p style="font-size:12px; color:var(--muted); margin:-4px 0 14px;">Saved only on this device — never sent to GitHub. No leading slash. Example: <code>Folder/Sub/Workbook.xlsx</code></p>
+    <div style="display:flex; gap:10px;">
+      <button id="setSignOut" style="color:var(--red); border-color:var(--red);">Sign out</button>
+      <button id="setCancel" style="flex:1;">Cancel</button>
+      <button id="savePathBtn" class="primary" style="flex:1;">Save</button>
     </div>
   </div>
 </div>

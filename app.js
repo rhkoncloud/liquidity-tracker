@@ -39,8 +39,9 @@ async function ensureToken(){
   try { const r = await pca.acquireTokenSilent({ scopes: SCOPES, account }); return r.accessToken; }
   catch(e){ const r = await pca.acquireTokenPopup({ scopes: SCOPES }); account = r.account; return r.accessToken; }
 }
+function getFilePath(){ return (localStorage.getItem("liq_filepath") || "").replace(/^\/+/, "").trim(); }
 function gUrl(suffix){
-  const path = APP_CONFIG.filePath.split("/").map(encodeURIComponent).join("/");
+  const path = getFilePath().split("/").map(encodeURIComponent).join("/");
   return `https://graph.microsoft.com/v1.0/me/drive/root:/${path}:/workbook/${suffix}`;
 }
 async function graph(suffix, method = "GET", body){
@@ -100,7 +101,9 @@ async function materialize(){
 function enqueue(fn){ chain = chain.then(fn).catch(e => setStatus("Sync error: " + e.message, false, true)); return chain; }
 
 async function load(){
-  if(loading) return; loading = true;
+  if(loading) return;
+  if(!getFilePath()){ openSettings(true); return; }
+  loading = true;
   try{
     setStatus("Syncing from OneDrive…", true);
     const events = await readEvents();
@@ -209,6 +212,19 @@ async function signIn(){
 }
 function signOut(){ try{ pca.logoutPopup({ account }); }catch(_){} account = null; showApp(false); }
 
+function openSettings(firstRun){
+  $("fPath").value = getFilePath();
+  $("set2").classList.add("open");
+  if(firstRun){ setStatus("Enter your workbook path to continue.", false); $("fPath").focus(); }
+}
+function savePath(){
+  const p = $("fPath").value.trim().replace(/^\/+/, "");
+  if(!p){ alert("Please enter your workbook's path in OneDrive."); return; }
+  localStorage.setItem("liq_filepath", p);
+  $("set2").classList.remove("open");
+  if(account) load();
+}
+
 function buildMonthSel(){
   const s = $("msel"); s.innerHTML = "";
   MONTHS.forEach((m, i) => { const o = document.createElement("option"); o.value = i; o.textContent = m + (i >= 9 ? " 2027" : " 2026"); s.appendChild(o); });
@@ -228,6 +244,11 @@ window.addEventListener("DOMContentLoaded", () => {
   $("cancelBtn").onclick = () => $("sheet").classList.remove("open");
   $("saveBtn").onclick = commitSheet;
   $("delBtn").onclick = deleteItem;
+  $("setBtn").onclick = () => openSettings(false);
+  $("savePathBtn").onclick = savePath;
+  $("setCancel").onclick = () => $("set2").classList.remove("open");
+  $("setSignOut").onclick = () => { $("set2").classList.remove("open"); signOut(); };
+  $("fPath").addEventListener("keydown", e => { if(e.key === "Enter") savePath(); });
   document.querySelectorAll("#fFreq button").forEach(b => b.onclick = () => setFreq(b.dataset.f));
 });
 

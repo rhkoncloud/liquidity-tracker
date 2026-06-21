@@ -1,18 +1,21 @@
 # Liquidity Tracker — setup guide
 
 A small installable app (PWA) that shows your monthly recurring payments and reads/writes the same
-workbook in your OneDrive (`Details/Finances/Finance_Review_FY2025-26.xlsx`, sheet `AppData`). It works
-on Android (installed to your home screen) and in any browser on your Mac. Both the app and Excel edit
-the one spreadsheet, so they always agree.
+workbook in your OneDrive (the one with the `AppLog` / `AppData` sheets). It works on Android (installed to
+your home screen) and in any browser on your Mac. Both the app and Excel edit the one spreadsheet, so they
+always agree.
 
 There is no server and no database — the app talks only to **your** OneDrive through Microsoft's official
 Graph API. Nothing is sent anywhere else.
 
-> **Where these files live:** the app code now sits in `~/Claude/Projects/MyFinanceApp` (a normal local
-> folder, deliberately **outside** OneDrive so git and OneDrive don't conflict). It is a git repository
-> linked to `github.com/rhkoncloud/liquidity-tracker`. Your **workbook stays in OneDrive** at
-> `Details/Finances/Finance_Review_FY2025-26.xlsx` — the app reaches it over the network, so it doesn't
-> matter that the code and the data live in different places.
+> **Where these files live:** the app code sits in `~/Claude/Projects/MyFinanceApp` (a normal local folder,
+> deliberately **outside** OneDrive so git and OneDrive don't conflict). It is a git repository linked to
+> `github.com/rhkoncloud/liquidity-tracker`. Your **workbook stays in OneDrive** — the app reaches it over
+> the network, so it doesn't matter that the code and the data live in different places.
+>
+> **Privacy note:** the exact path to your workbook is **not** stored in the code or this repo. You enter it
+> once inside the app (Settings ⚙) and it's saved locally on each device — so this public repository never
+> reveals where your financial data lives.
 
 Total setup time: about 15 minutes, done once.
 
@@ -23,7 +26,7 @@ Total setup time: about 15 minutes, done once.
 1. Register the app with Microsoft (free) to get a Client ID.
 2. Put the app's files online over HTTPS (GitHub Pages — free).
 3. Paste your Client ID into `config.js`.
-4. Open the page on your phone and "Add to Home screen".
+4. Open the page on your phone, sign in, and enter your workbook path once (Settings ⚙); then "Add to Home screen".
 
 ---
 
@@ -109,15 +112,17 @@ repo whose `origin` points to `github.com/rhkoncloud/liquidity-tracker` (public)
 
 ## Step 3 — Add your Client ID
 
+`config.js` holds only your **public Client ID** — no secrets, and (deliberately) **not** your file path.
+
 1. Open `config.js`.
 2. Replace `PASTE_YOUR_CLIENT_ID_HERE` with the Application (client) ID from Step 1.
 3. Leave `redirectUri` as `null` (it auto-uses the page URL) unless you host under a sub-path and want to
    pin it explicitly.
-4. Confirm `filePath` matches where the workbook lives in your OneDrive. Default:
-   `Details/Finances/Finance_Review_FY2025-26.xlsx`. (It's the path **relative to your OneDrive root** — no
-   leading slash, use the real folder names.)
-5. Save, then publish the change: `cd ~/Claude/Projects/MyFinanceApp && git add config.js && git commit -m
+4. Save, then publish the change: `cd ~/Claude/Projects/MyFinanceApp && git add config.js && git commit -m
    "Add client id" && git push`. (Or use GitHub Desktop.)
+
+> Your workbook's path is **not** put here. You'll enter it once inside the app after signing in (Step 4),
+> and it's saved locally on your device — keeping it out of the public repo.
 
 ---
 
@@ -125,13 +130,17 @@ repo whose `origin` points to `github.com/rhkoncloud/liquidity-tracker` (public)
 
 1. On your Android phone, open the GitHub Pages URL in **Chrome**.
 2. Tap **Sign in with Microsoft**, approve the permission prompt once.
-3. Chrome menu (⋮) → **Add to Home screen / Install app**. An icon appears like a normal app; it opens
+3. **Enter your workbook path** when prompted (or via Settings ⚙): the path to the workbook inside your
+   OneDrive, relative to the OneDrive root, e.g. `Folder/Subfolder/YourWorkbook.xlsx` — no leading slash.
+   This is saved on the device only. Repeat once on each device you use (phone, Mac).
+4. Chrome menu (⋮) → **Add to Home screen / Install app**. An icon appears like a normal app; it opens
    full-screen.
-4. On your Mac, open the same URL in any browser, or in Chrome use **Install** from the address bar.
+5. On your Mac, open the same URL in any browser, sign in and enter the path once, or in Chrome use
+   **Install** from the address bar.
 
 That's it. Pick a month, tap a row to mark it paid, tap ✎ to change an amount, or **+ Add expense** to add
-one. Every change writes straight to the `AppData` sheet in your workbook; the monthly summary on that sheet
-(and anything you build referencing it) updates automatically.
+one. Every change is appended to the `AppLog` sheet and the `AppData` snapshot is refreshed, so your Excel
+monthly summary stays current.
 
 ---
 
@@ -207,7 +216,7 @@ file open in Excel during heavy app use.
 |------|---------|
 | `index.html` | The app's markup + security policy |
 | `app.js` | All app logic (sign-in, read/write, UI) |
-| `config.js` | **Your** Client ID + file path (the only file you edit) |
+| `config.js` | **Your** public Client ID (the only file you edit; no path, no secrets) |
 | `manifest.webmanifest` | Makes it installable as an app |
 | `sw.js` | Offline support for the UI (never caches data) |
 | `icon-192.png`, `icon-512.png` | App icons |
