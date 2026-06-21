@@ -132,14 +132,19 @@
 
 <div class="sheet" id="set2">
   <div class="panel">
-    <h3>Settings</h3>
-    <div class="field"><label>Workbook path in OneDrive (relative to your OneDrive root)</label>
-      <input id="fPath" placeholder="Folder/Subfolder/Workbook.xlsx" autocapitalize="off" autocorrect="off" spellcheck="false" /></div>
-    <p style="font-size:12px; color:var(--muted); margin:-4px 0 14px;">Saved only on this device — never sent to GitHub. No leading slash. Example: <code>Folder/Sub/Workbook.xlsx</code></p>
-    <div style="display:flex; gap:10px;">
+    <h3>Choose your statements folder</h3>
+    <p style="font-size:12px; color:var(--muted); margin:-4px 0 10px;">Browse to the OneDrive folder that holds your workbook, then tap "Use this folder". Saved on this device only — never sent to GitHub.</p>
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+      <button id="pickerUp" aria-label="Up a folder" title="Up a folder">⬆</button>
+      <div id="pickerPath" style="flex:1; font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">/</div>
+      <button id="pickerReload" aria-label="Reload folder" title="Reload">↻</button>
+    </div>
+    <div id="pickerList" style="max-height:42vh; overflow:auto; border:1px solid var(--line); border-radius:10px;"></div>
+    <div id="pickerMsg" class="status"></div>
+    <button id="useFolderBtn" class="primary" style="width:100%; margin-top:10px;">✓ Use this folder</button>
+    <div style="display:flex; gap:10px; margin-top:10px;">
       <button id="setSignOut" style="color:var(--red); border-color:var(--red);">Sign out</button>
-      <button id="setCancel" style="flex:1;">Cancel</button>
-      <button id="savePathBtn" class="primary" style="flex:1;">Save</button>
+      <button id="setCancel" style="flex:1;">Close</button>
     </div>
   </div>
 </div>

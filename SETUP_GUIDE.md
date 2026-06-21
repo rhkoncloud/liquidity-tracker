@@ -26,7 +26,7 @@ Total setup time: about 15 minutes, done once.
 1. Register the app with Microsoft (free) to get a Client ID.
 2. Put the app's files online over HTTPS (GitHub Pages — free).
 3. Paste your Client ID into `config.js`.
-4. Open the page on your phone, sign in, and enter your workbook path once (Settings ⚙); then "Add to Home screen".
+4. Open the page on your phone, sign in, and pick your workbook from the OneDrive browser; then "Add to Home screen".
 
 ---
 
@@ -130,9 +130,10 @@ repo whose `origin` points to `github.com/rhkoncloud/liquidity-tracker` (public)
 
 1. On your Android phone, open the GitHub Pages URL in **Chrome**.
 2. Tap **Sign in with Microsoft**, approve the permission prompt once.
-3. **Enter your workbook path** when prompted (or via Settings ⚙): the path to the workbook inside your
-   OneDrive, relative to the OneDrive root, e.g. `Folder/Subfolder/YourWorkbook.xlsx` — no leading slash.
-   This is saved on the device only. Repeat once on each device you use (phone, Mac).
+3. **Pick your statements folder.** Right after signing in, a OneDrive browser opens (also reachable anytime via
+   Settings ⚙). Tap through your folders to the one that holds your workbook, then tap **"✓ Use this folder"** —
+   no typing. The app finds the Excel workbook inside automatically (if a folder happens to hold more than one,
+   it asks you to tap which, just once). Saved on that device only; do this once per device (phone, Mac).
 4. Chrome menu (⋮) → **Add to Home screen / Install app**. An icon appears like a normal app; it opens
    full-screen.
 5. On your Mac, open the same URL in any browser, sign in and enter the path once, or in Chrome use

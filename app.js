@@ -212,18 +212,99 @@ async function signIn(){
 }
 function signOut(){ try{ pca.logoutPopup({ account }); }catch(_){} account = null; showApp(false); }
 
-function openSettings(firstRun){
-  $("fPath").value = getFilePath();
-  $("set2").classList.add("open");
-  if(firstRun){ setStatus("Enter your workbook path to continue.", false); $("fPath").focus(); }
+/* ---------- OneDrive folder picker ---------- */
+let pickerPath = "";
+const encPath = p => p.split("/").filter(Boolean).map(encodeURIComponent).join("/");
+
+async function graphApi(pathAndQuery){
+  const tok = await ensureToken();
+  const res = await fetch("https://graph.microsoft.com/v1.0" + pathAndQuery, { headers: { Authorization: "Bearer " + tok } });
+  if(!res.ok){ let d=""; try{ const j=await res.json(); d=(j.error&&j.error.message)||""; }catch(_){} throw new Error(res.status + (d?" — "+d:"")); }
+  return res.json();
 }
-function savePath(){
-  const p = $("fPath").value.trim().replace(/^\/+/, "");
-  if(!p){ alert("Please enter your workbook's path in OneDrive."); return; }
-  localStorage.setItem("liq_filepath", p);
+
+function openSettings(firstRun){
+  $("set2").classList.add("open");
+  if(!account){ $("pickerMsg").textContent = "Please sign in first."; $("pickerList").innerHTML = ""; $("pickerPath").textContent = "/"; return; }
+  if(firstRun) setStatus("Choose your workbook to continue.", false);
+  const existing = getFilePath();
+  const startDir = existing.includes("/") ? existing.split("/").slice(0, -1).join("/") : "";
+  browse(startDir);
+}
+
+async function browse(path){
+  pickerPath = path || "";
+  $("pickerPath").textContent = "/" + pickerPath;
+  $("pickerUp").disabled = !pickerPath;
+  $("pickerMsg").textContent = "Loading…";
+  const list = $("pickerList"); list.innerHTML = "";
+  try{
+    const data = await listChildren(pickerPath);
+    const items = data.value || [];
+    const folders = items.filter(i => i.folder).sort((a,b) => a.name.localeCompare(b.name));
+    const wbCount = items.filter(i => i.file && /\.xls[xm]$/i.test(i.name)).length;
+    folders.forEach(f => list.appendChild(folderRow(f.name, () => browse((pickerPath ? pickerPath + "/" : "") + f.name))));
+    if(!folders.length){ const e = document.createElement("div"); e.className = "status"; e.textContent = "No subfolders here."; list.appendChild(e); }
+    $("pickerMsg").textContent = wbCount
+      ? (wbCount + " Excel workbook" + (wbCount > 1 ? "s" : "") + " in this folder — tap “Use this folder”.")
+      : "No Excel workbook here — open the folder that contains it.";
+  }catch(e){ $("pickerMsg").textContent = "Couldn't open folder: " + e.message; }
+}
+
+function listChildren(path){
+  const base = path ? `/me/drive/root:/${encPath(path)}:/children` : "/me/drive/root/children";
+  return graphApi(base + "?$select=name,id,folder,file&$top=200");
+}
+
+function folderRow(name, onClick){
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex; align-items:center; gap:10px; padding:11px 12px; border-bottom:1px solid var(--line); cursor:pointer;";
+  row.onclick = onClick;
+  const ic = document.createElement("span"); ic.textContent = "📁"; ic.style.fontSize = "16px"; ic.setAttribute("aria-hidden", "true");
+  const nm = document.createElement("span"); nm.textContent = name;
+  nm.style.cssText = "flex:1; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;";
+  const ch = document.createElement("span"); ch.textContent = "›"; ch.style.cssText = "font-size:16px; color:var(--muted);";
+  row.appendChild(ic); row.appendChild(nm); row.appendChild(ch);
+  return row;
+}
+
+async function useFolder(){
+  $("pickerMsg").textContent = "Looking for your workbook…";
+  try{
+    const data = await listChildren(pickerPath);
+    const xlsx = (data.value || []).filter(i => i.file && /\.xls[xm]$/i.test(i.name)).sort((a,b) => a.name.localeCompare(b.name));
+    if(xlsx.length === 0){ $("pickerMsg").textContent = "No Excel workbook in this folder. Open the folder that contains it."; return; }
+    if(xlsx.length === 1){ saveWorkbook(pickerPath, xlsx[0].name); return; }
+    chooseWorkbook(xlsx);  // rare: more than one workbook → confirm which once
+  }catch(e){ $("pickerMsg").textContent = "Couldn't read folder: " + e.message; }
+}
+
+function chooseWorkbook(files){
+  const list = $("pickerList"); list.innerHTML = "";
+  $("pickerMsg").textContent = "This folder has several workbooks — tap the one the tracker uses:";
+  const cur = getFilePath();
+  files.forEach(f => {
+    const full = (pickerPath ? pickerPath + "/" : "") + f.name;
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex; align-items:center; gap:10px; padding:11px 12px; border-bottom:1px solid var(--line); cursor:pointer;";
+    row.onclick = () => saveWorkbook(pickerPath, f.name);
+    const ic = document.createElement("span"); ic.textContent = "📄"; ic.style.fontSize = "16px"; ic.setAttribute("aria-hidden", "true");
+    const nm = document.createElement("span"); nm.textContent = f.name;
+    nm.style.cssText = "flex:1; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;";
+    const tag = document.createElement("span"); tag.textContent = full === cur ? "current ✓" : "use";
+    tag.style.cssText = "font-size:11px; color:" + (full === cur ? "var(--green)" : "var(--blue)") + ";";
+    row.appendChild(ic); row.appendChild(nm); row.appendChild(tag);
+    list.appendChild(row);
+  });
+}
+
+function saveWorkbook(folder, file){
+  const full = ((folder ? folder + "/" : "") + file).replace(/^\/+/, "");
+  localStorage.setItem("liq_filepath", full);
   $("set2").classList.remove("open");
   if(account) load();
 }
+function pickerUp(){ if(pickerPath) browse(pickerPath.split("/").slice(0, -1).join("/")); }
 
 function buildMonthSel(){
   const s = $("msel"); s.innerHTML = "";
@@ -245,10 +326,11 @@ window.addEventListener("DOMContentLoaded", () => {
   $("saveBtn").onclick = commitSheet;
   $("delBtn").onclick = deleteItem;
   $("setBtn").onclick = () => openSettings(false);
-  $("savePathBtn").onclick = savePath;
   $("setCancel").onclick = () => $("set2").classList.remove("open");
   $("setSignOut").onclick = () => { $("set2").classList.remove("open"); signOut(); };
-  $("fPath").addEventListener("keydown", e => { if(e.key === "Enter") savePath(); });
+  $("pickerUp").onclick = pickerUp;
+  $("pickerReload").onclick = () => browse(pickerPath);
+  $("useFolderBtn").onclick = useFolder;
   document.querySelectorAll("#fFreq button").forEach(b => b.onclick = () => setFreq(b.dataset.f));
 });
 
