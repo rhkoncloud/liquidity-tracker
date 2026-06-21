@@ -1,0 +1,12 @@
+# OS / editor
+.DS_Store
+*.swp
+
+# Local agent/tooling
+.claude/
+
+# Local config overrides (keep config.js with placeholders only)
+config.local.js
+
+# Logs
+*.log

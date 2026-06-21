@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1F3864" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com; frame-src https://login.microsoftonline.com https://login.live.com; manifest-src 'self'; base-uri 'self'; form-action 'self' https://login.microsoftonline.com https://login.live.com; object-src 'none'" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>Liquidity Tracker</title>
+<style>
+  :root{
+    --navy:#1F3864; --blue:#2E5496; --green:#1f7a4d; --red:#b3261e;
+    --bg:#f4f5f7; --card:#ffffff; --ink:#1a1f29; --muted:#6b7280; --line:#e3e6ec;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#11151c; --card:#1a2029; --ink:#e8eaee; --muted:#9aa3b2; --line:#2b323d; --blue:#6ea8ff; --green:#5ad19a; --red:#ff6b6b; }
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+        background:var(--bg); color:var(--ink); padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  header{ background:var(--navy); color:#fff; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:5; }
+  header .title{ font-size:17px; font-weight:600; }
+  header .sub{ font-size:11px; opacity:.85; margin-top:1px; max-width:60vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .wrap{ max-width:680px; margin:0 auto; padding:14px 14px 90px; }
+  button{ font:inherit; cursor:pointer; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); padding:9px 14px; }
+  button.primary{ background:var(--blue); border-color:var(--blue); color:#fff; font-weight:600; }
+  button.ghost{ background:transparent; border:none; color:#fff; }
+  select,input{ font:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 11px; }
+  .cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:14px 0; }
+  .cardm{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:11px; }
+  .cardm .lbl{ font-size:11px; color:var(--muted); }
+  .cardm .val{ font-size:19px; font-weight:700; margin-top:3px; }
+  .toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .toolbar select{ flex:1; }
+  .row{ display:flex; align-items:center; gap:11px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:var(--card); margin-bottom:8px; }
+  .row .tick{ width:24px; height:24px; border-radius:50%; border:2px solid var(--line); flex:none; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; cursor:pointer; }
+  .row.paid .tick{ background:var(--green); border-color:var(--green); }
+  .row .name{ flex:1; min-width:0; cursor:pointer; }
+  .row .name .n{ font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row.paid .name .n{ text-decoration:line-through; color:var(--muted); }
+  .row .name .c{ font-size:11px; color:var(--muted); }
+  .row .amt{ font-size:15px; font-weight:600; white-space:nowrap; }
+  .row .edit{ color:var(--muted); border:none; background:transparent; padding:6px; font-size:16px; }
+  .bars{ display:flex; align-items:flex-end; gap:4px; height:96px; margin-top:10px; }
+  .bars .b{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
+  .bars .b .bar{ width:100%; border-radius:3px 3px 0 0; background:var(--line); min-height:2px; }
+  .bars .b.cur .bar{ background:var(--blue); }
+  .bars .b .ml{ font-size:9px; color:var(--muted); }
+  .bars .b.cur .ml{ color:var(--blue); font-weight:600; }
+  .sec{ font-size:12px; color:var(--muted); margin:18px 0 6px; }
+  .fab{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(16px + env(safe-area-inset-bottom)); z-index:8; }
+  .fab button{ background:var(--blue); color:#fff; border:none; border-radius:30px; padding:13px 22px; font-weight:600; box-shadow:0 6px 18px rgba(0,0,0,.18); }
+  .sheet{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:flex-end; z-index:20; }
+  .sheet.open{ display:flex; }
+  .sheet .panel{ background:var(--card); width:100%; max-width:680px; margin:0 auto; border-radius:16px 16px 0 0; padding:18px 16px calc(20px + env(safe-area-inset-bottom)); }
+  .sheet h3{ margin:0 0 12px; font-size:16px; }
+  .field{ display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
+  .field label{ font-size:12px; color:var(--muted); }
+  .field input,.field select{ width:100%; }
+  .seg{ display:flex; gap:6px; }
+  .seg button{ flex:1; }
+  .seg button.on{ background:var(--blue); border-color:var(--blue); color:#fff; }
+  .status{ font-size:12px; color:var(--muted); text-align:center; padding:6px; word-break:break-word; }
+  .err{ color:var(--red); }
+  .gate{ text-align:center; padding:50px 20px; }
+  .gate p{ color:var(--muted); font-size:14px; line-height:1.6; }
+  .hide{ display:none !important; }
+  .spin{ display:inline-block; width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--blue); border-radius:50%; animation:s .7s linear infinite; vertical-align:-2px; }
+  @keyframes s{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="title">Liquidity Tracker</div>
+    <div class="sub" id="hsub">FY 2026-27 · OneDrive</div>
+  </div>
+  <button class="ghost" id="signBtn">Sign in</button>
+</header>
+
+<div class="wrap">
+  <div id="gate" class="gate">
+    <p><strong>Welcome.</strong> Sign in with your Microsoft account to load your liquidity calendar from OneDrive. Your data never leaves Microsoft and this device — the app talks only to your own OneDrive file.</p>
+    <button class="primary" id="signBtn2" style="margin-top:14px;">Sign in with Microsoft</button>
+    <p id="cfgwarn" class="err" style="margin-top:18px;"></p>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="cards">
+      <div class="cardm"><div class="lbl">Needed this month</div><div class="val" id="mNeed">—</div></div>
+      <div class="cardm"><div class="lbl">Still to pay</div><div class="val" id="mLeft" style="color:var(--blue)">—</div></div>
+      <div class="cardm"><div class="lbl">Paid</div><div class="val" id="mPaid" style="color:var(--green)">—</div></div>
+    </div>
+    <div class="toolbar">
+      <select id="msel"></select>
+      <button id="refreshBtn" title="Reload from OneDrive" aria-label="Reload">↻</button>
+    </div>
+    <div id="rows"></div>
+    <div class="sec">Cash needed across the year — tap a bar to jump</div>
+    <div class="bars" id="bars"></div>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<div class="fab hide" id="fab"><button id="addBtn">+ Add expense</button></div>
+
+<div class="sheet" id="sheet">
+  <div class="panel">
+    <h3 id="sheetTitle">Add expense</h3>
+    <div class="field"><label>Name</label><input id="fName" maxlength="60" placeholder="e.g. Swimming class" /></div>
+    <div class="field"><label>Category</label>
+      <select id="fCat"><option>Family</option><option>Education</option><option>Insurance</option><option>Utilities</option><option>Health</option><option>Vehicle</option><option>Tax</option><option>Other</option></select>
+    </div>
+    <div class="field"><label>Amount (₹)</label><input id="fAmt" type="number" inputmode="numeric" min="0" placeholder="0" /></div>
+    <div class="field" id="freqField"><label>Applies to</label>
+      <div class="seg" id="fFreq">
+        <button type="button" data-f="month" class="on">This month only</button>
+        <button type="button" data-f="all">Every month</button>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:6px;">
+      <button id="delBtn" class="hide" style="color:var(--red); border-color:var(--red);">Delete</button>
+      <button id="cancelBtn" style="flex:1;">Cancel</button>
+      <button id="saveBtn" class="primary" style="flex:1;">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/msal/2.38.3/msal-browser.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
