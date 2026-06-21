@@ -8,6 +8,12 @@ the one spreadsheet, so they always agree.
 There is no server and no database — the app talks only to **your** OneDrive through Microsoft's official
 Graph API. Nothing is sent anywhere else.
 
+> **Where these files live:** the app code now sits in `~/Claude/Projects/MyFinanceApp` (a normal local
+> folder, deliberately **outside** OneDrive so git and OneDrive don't conflict). It is a git repository
+> linked to `github.com/rhkoncloud/liquidity-tracker`. Your **workbook stays in OneDrive** at
+> `Details/Finances/Finance_Review_FY2025-26.xlsx` — the app reaches it over the network, so it doesn't
+> matter that the code and the data live in different places.
+
 Total setup time: about 15 minutes, done once.
 
 ---
@@ -75,19 +81,29 @@ single-page app must never hold one, and this app doesn't.
 
 A PWA must be served over HTTPS (this is also what keeps it secure). GitHub Pages is the simplest free option.
 
-1. Create a free account at **https://github.com** if you don't have one.
-2. Create a new **public** repository, e.g. `liquidity-tracker`.
-3. Upload these files from the `MyFinanceApp` folder into the repo (drag-and-drop in the GitHub web UI →
-   "Add file → Upload files"): `index.html`, `app.js`, `config.js`, `manifest.webmanifest`, `sw.js`,
-   `icon-192.png`, `icon-512.png`.
-4. In the repo: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, branch `main`,
-   folder `/ (root)`, **Save**.
-5. After a minute, GitHub shows your live URL, e.g. `https://YOURNAME.github.io/liquidity-tracker/`.
-6. Go back to your Azure app registration (Step 1) → **Authentication** → add that exact URL as a
+The repository is **already created and linked**: the local folder `~/Claude/Projects/MyFinanceApp` is a git
+repo whose `origin` points to `github.com/rhkoncloud/liquidity-tracker` (public).
+
+1. **Push the code to GitHub** (from a Terminal):
+   ```
+   cd ~/Claude/Projects/MyFinanceApp
+   git push -u origin main
+   ```
+   The first push asks you to sign in to GitHub (a browser window opens, or your Mac's credential helper
+   handles it). If it doesn't prompt cleanly, install the GitHub CLI once — `brew install gh` then
+   `gh auth login` — and re-run the push. (GitHub Desktop also works: **Add local repository → choose this
+   folder → Push origin**.)
+2. In the repo on GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, branch
+   `main`, folder `/ (root)`, **Save**.
+3. After a minute, GitHub shows your live URL, e.g. `https://rhkoncloud.github.io/liquidity-tracker/`.
+4. Go back to your Azure app registration (Step 1) → **Authentication** → add that exact URL as a
    **Single-page application** redirect URI (include the trailing slash). Save.
 
 > A public repo only exposes the app's code (which contains no secrets) — never your spreadsheet or your
 > data. Your financial data stays in OneDrive and is only fetched into the app after you sign in.
+
+**Making changes later:** edit the files in `~/Claude/Projects/MyFinanceApp`, then `git add -A && git commit
+-m "…" && git push`. GitHub Pages redeploys automatically within a minute.
 
 ---
 
@@ -100,7 +116,8 @@ A PWA must be served over HTTPS (this is also what keeps it secure). GitHub Page
 4. Confirm `filePath` matches where the workbook lives in your OneDrive. Default:
    `Details/Finances/Finance_Review_FY2025-26.xlsx`. (It's the path **relative to your OneDrive root** — no
    leading slash, use the real folder names.)
-5. Re-upload the edited `config.js` to the repo.
+5. Save, then publish the change: `cd ~/Claude/Projects/MyFinanceApp && git add config.js && git commit -m
+   "Add client id" && git push`. (Or use GitHub Desktop.)
 
 ---
 
