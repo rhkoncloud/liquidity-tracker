@@ -7,6 +7,6 @@
                  This is a public identifier, not a secret — safe to commit.
    redirectUri : leave null to use the page's own URL (recommended). */
 window.APP_CONFIG = {
-  clientId: "PASTE_YOUR_CLIENT_ID_HERE",
+  clientId: "de232d73-c2e1-4ac8-a0bc-60a95506de2a",
   redirectUri: null
 };
