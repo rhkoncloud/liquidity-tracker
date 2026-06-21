@@ -169,10 +169,11 @@ What you should do:
 - **Sign out** (button top-right) on any shared or public computer.
 - **Keep the repo public-code / private-data distinction in mind**: never paste anything other than the
   Client ID into `config.js`, and never commit the spreadsheet to the repo.
-- **Optional hardening — pin the MSAL library:** on the cdnjs page for `msal-browser` 2.38.3, copy the
-  official `integrity="sha384-…"` value and add it to the `<script src="…msal-browser.min.js" …>` tag in
-  `index.html`. This makes the browser reject the library if it were ever tampered with. (It was left off
-  because an incorrect hash silently blocks the app; add the real one from cdnjs.)
+- **Optional hardening — pin the MSAL library:** the app loads MSAL from jsDelivr
+  (`cdn.jsdelivr.net/npm/@azure/msal-browser@2/lib/msal-browser.min.js`). For extra safety you can pin an
+  exact version and add its Subresource Integrity hash — jsDelivr shows a "copy SRI" button next to each
+  file — to the `<script src="…msal-browser.min.js" …>` tag in `index.html`. This makes the browser reject
+  the library if it were ever tampered with. (Left off by default because a wrong hash silently blocks the app.)
 - **Review app access anytime** at https://account.microsoft.com → Privacy / Apps, where you can revoke the
   app's access with one click.
 
