@@ -159,8 +159,14 @@ function togglePaid(rec, mi){
   const val = rec.paid[mi] ? "TRUE" : "FALSE";
   enqueue(async () => { await appendEvents([mkEvent(rec.id, "paid", mi, val)]); await materialize(); setStatus("Saved ✓ " + new Date().toLocaleTimeString()); });
 }
+function ensureCatOption(cat){
+  if(!cat) return;
+  const sel = $("fCat");
+  if(![...sel.options].some(o => o.value === cat)){ const o = document.createElement("option"); o.textContent = cat; sel.appendChild(o); }
+}
 function openEdit(rec, mi){
   editing = { rec, mi }; $("sheetTitle").textContent = "Edit expense";
+  ensureCatOption(rec.cat);
   $("fName").value = rec.item; $("fCat").value = rec.cat || "Other"; $("fAmt").value = rec.amount[mi];
   $("freqField").style.display = "none"; $("delBtn").classList.remove("hide"); $("sheet").classList.add("open");
 }
