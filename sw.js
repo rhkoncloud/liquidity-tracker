@@ -1,8 +1,8 @@
 /* Service worker — caches ONLY the static app shell so the UI opens offline.
    It deliberately never touches Microsoft Graph or login endpoints, so no financial
    data or tokens are ever written to the cache. */
-const CACHE = "liquidity-shell-v1";
-const SHELL = ["./", "index.html", "app.js", "config.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+const CACHE = "liquidity-shell-v2";
+const SHELL = ["./", "index.html", "app.js", "pin.js", "dashboard.js", "config.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

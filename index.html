@@ -63,6 +63,12 @@
   .seg button.on{ background:var(--blue); border-color:var(--blue); color:#fff; }
   .status{ font-size:12px; color:var(--muted); text-align:center; padding:6px; word-break:break-word; }
   .err{ color:var(--red); }
+  .tabs{ display:flex; gap:8px; background:var(--navy); padding:0 14px 12px; }
+  .tabs button{ flex:1; background:rgba(255,255,255,.14); border:none; color:#fff; padding:8px; border-radius:20px; font-size:13px; }
+  .tabs button.on{ background:#fff; color:var(--navy); font-weight:600; }
+  .chartcard{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:8px; }
+  #lock{ position:fixed; inset:0; background:var(--bg); z-index:60; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; }
+  #lock input{ text-align:center; font-size:22px; letter-spacing:8px; width:180px; }
   .gate{ text-align:center; padding:50px 20px; }
   .gate p{ color:var(--muted); font-size:14px; line-height:1.6; }
   .hide{ display:none !important; }
@@ -81,6 +87,11 @@
     <button class="ghost" id="signBtn">Sign in</button>
   </div>
 </header>
+
+<nav class="tabs hide" id="tabs">
+  <button id="tabTrack" class="on">Tracker</button>
+  <button id="tabDash">Dashboard</button>
+</nav>
 
 <div class="wrap">
   <div id="gate" class="gate">
@@ -104,6 +115,29 @@
     <div class="bars" id="bars"></div>
     <div class="status" id="status"></div>
   </div>
+
+  <div id="dash" class="hide">
+    <div class="cards">
+      <div class="cardm"><div class="lbl">FY total spend</div><div class="val" id="dTot">—</div></div>
+      <div class="cardm"><div class="lbl">Avg / month</div><div class="val" id="dAvg">—</div></div>
+      <div class="cardm"><div class="lbl">Months over base</div><div class="val" id="dOver">—</div></div>
+    </div>
+    <div class="toolbar">
+      <div class="status" id="dMsg" style="flex:1; text-align:left; padding:0;"></div>
+      <button id="dRefresh" title="Reload from OneDrive" aria-label="Reload">↻</button>
+    </div>
+    <div class="sec">Monthly spend vs steady base — red bars exceed the base</div>
+    <div class="chartcard"><div style="height:220px;"><canvas id="dcTrend"></canvas></div></div>
+    <div class="sec">Annual spend by category — tap a bar to drill down</div>
+    <div class="chartcard"><div style="height:440px;"><canvas id="dcCat"></canvas></div></div>
+    <div class="sec">Category trend — red months are outliers</div>
+    <select id="dsel" style="width:100%; margin-bottom:8px;"></select>
+    <div class="chartcard"><div style="height:220px;"><canvas id="dcDrill"></canvas></div></div>
+    <div class="sec">Outliers — months that broke the pattern</div>
+    <div id="dOut"></div>
+    <div class="sec">FY26-27 liquidity — cash needed vs base income</div>
+    <div class="chartcard"><div style="height:220px;"><canvas id="dcLiq"></canvas></div></div>
+  </div>
 </div>
 
 <div class="fab hide" id="fab"><button id="addBtn">+ Add expense</button></div>
@@ -113,7 +147,7 @@
     <h3 id="sheetTitle">Add expense</h3>
     <div class="field"><label>Name</label><input id="fName" maxlength="60" placeholder="e.g. Swimming class" /></div>
     <div class="field"><label>Category</label>
-      <select id="fCat"><option>Family</option><option>Agriculture</option><option>Groceries</option><option>Fuel</option><option>Education</option><option>Insurance</option><option>Utilities</option><option>Health</option><option>Vehicle</option><option>Tax</option><option>Other</option></select>
+      <select id="fCat"><option>Family</option><option>Agriculture</option><option>Groceries</option><option>Fuel</option><option>Education</option><option>Insurance</option><option>Utilities</option><option>Health</option><option>Fitness</option><option>Vehicle</option><option>Tax</option><option>Other</option></select>
     </div>
     <div class="field"><label>Amount (₹)</label><input id="fAmt" type="number" inputmode="numeric" min="0" placeholder="0" /></div>
     <div class="field" id="freqField"><label>Applies to</label>
@@ -142,6 +176,7 @@
     <div id="pickerList" style="max-height:42vh; overflow:auto; border:1px solid var(--line); border-radius:10px;"></div>
     <div id="pickerMsg" class="status"></div>
     <button id="useFolderBtn" class="primary" style="width:100%; margin-top:10px;">✓ Use this folder</button>
+    <button id="pinBtn" style="width:100%; margin-top:10px;">Set app PIN</button>
     <div style="display:flex; gap:10px; margin-top:10px;">
       <button id="setSignOut" style="color:var(--red); border-color:var(--red);">Sign out</button>
       <button id="setCancel" style="flex:1;">Close</button>
@@ -149,8 +184,33 @@
   </div>
 </div>
 
+<div class="sheet" id="pinSheet">
+  <div class="panel">
+    <h3>App PIN</h3>
+    <div class="field" id="pinCurF"><label>Current PIN</label><input id="pinCur" type="password" inputmode="numeric" maxlength="6" autocomplete="off" /></div>
+    <div class="field"><label>New PIN (4–6 digits)</label><input id="pinNew" type="password" inputmode="numeric" maxlength="6" autocomplete="off" /></div>
+    <div class="field"><label>Repeat new PIN</label><input id="pinNew2" type="password" inputmode="numeric" maxlength="6" autocomplete="off" /></div>
+    <div class="status err" id="pinMsg"></div>
+    <div style="display:flex; gap:10px; margin-top:6px;">
+      <button id="pinCancel" style="flex:1;">Cancel</button>
+      <button id="pinSave" class="primary" style="flex:1;">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="lock" class="hide">
+  <div style="font-size:30px;" aria-hidden="true">🔒</div>
+  <div style="font-weight:600;">Enter PIN</div>
+  <input id="lockPin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="PIN" />
+  <button class="primary" id="lockBtn" style="width:180px;">Unlock</button>
+  <div class="status err" id="lockMsg"></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2/lib/msal-browser.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="config.js"></script>
 <script src="app.js"></script>
+<script src="pin.js"></script>
+<script src="dashboard.js"></script>
 </body>
 </html>

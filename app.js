@@ -210,7 +210,13 @@ function setStatus(t, isBusy, isErr){
   if(isBusy){ const sp = document.createElement("span"); sp.className = "spin"; s.appendChild(sp); s.appendChild(document.createTextNode(" ")); }
   s.appendChild(document.createTextNode(t)); s.className = "status" + (isErr ? " err" : "");
 }
-function showApp(on){ $("gate").classList.toggle("hide", on); $("app").classList.toggle("hide", !on); $("fab").classList.toggle("hide", !on); $("signBtn").textContent = on ? "Sign out" : "Sign in"; }
+function showApp(on){
+  $("gate").classList.toggle("hide", on); $("app").classList.toggle("hide", !on); $("fab").classList.toggle("hide", !on);
+  $("signBtn").textContent = on ? "Sign out" : "Sign in";
+  $("tabs").classList.toggle("hide", !on);
+  $("dash").classList.add("hide");
+  $("tabTrack").classList.add("on"); $("tabDash").classList.remove("on");
+}
 
 async function signIn(){
   try{ const r = await pca.loginPopup({ scopes: SCOPES, prompt: "select_account" }); account = r.account; $("hsub").textContent = account.username; showApp(true); await load(); }
